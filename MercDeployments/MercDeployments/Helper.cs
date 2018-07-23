@@ -2,11 +2,11 @@
 using BattleTech.Data;
 using BattleTech.Framework;
 using HBS.Collections;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Newtonsoft.Json;
 
 namespace MercDeployments {
 

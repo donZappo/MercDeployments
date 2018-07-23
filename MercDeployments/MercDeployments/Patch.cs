@@ -609,8 +609,16 @@ namespace MercDeployments {
                     else {
                         Settings settings = Helper.LoadSettings();
                         System.Random rand = new System.Random();
-                        int ChanceDivider = Mathf.Max(1, 2 ^ ((Fields.MissionsDoneCurrentMonth + 1) - Mathf.RoundToInt((__instance.Constants.Finances.QuarterLength * settings.MissionChancePerDay))));
-                        if (rand.NextDouble() < settings.MissionChancePerDay / ChanceDivider) {
+                        double MissionChance = 0;
+                        if(Fields.MissionsDoneCurrentMonth < settings.MaxDeploymentsPerMonth)
+                        {
+                            MissionChance = settings.MissionChancePerDay;
+                        }
+                        else
+                        {
+                            MissionChance = 0;
+                        }
+                        if (rand.NextDouble() < MissionChance) {
                             __instance.PauseTimer();
                             __instance.StopPlayMode();
 
