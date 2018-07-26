@@ -633,7 +633,7 @@ namespace MercDeployments {
                         }
                         else if(PilotCount <=12 && PilotCount > 6)
                         {
-                            MissionChance = MissionChance - 0.5;
+                            MissionChance = MissionChance - 0.05;
                             MaxDeployments = MaxDeployments - 2;
                         }
 
