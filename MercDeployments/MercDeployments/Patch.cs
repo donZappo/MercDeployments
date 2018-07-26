@@ -81,6 +81,7 @@ namespace MercDeployments {
                 if (Fields.Deployment) {
                     Settings settings = Helper.LoadSettings();
                     int bonusPayment = 0;
+                    
                     foreach (MissionObjectiveResult missionObjectiveResult in __instance.MissionObjectiveResultList) {
                         if (!missionObjectiveResult.isPrimary && missionObjectiveResult.status == ObjectiveStatus.Succeeded) {
                             bonusPayment += Mathf.RoundToInt(settings.BonusPercentage * Fields.DeploymentSalary);
@@ -112,11 +113,11 @@ namespace MercDeployments {
                     float DeploymentSalaryMult = settings.DeploymentSalaryMultiplier;
                     int PilotCount = sim.PilotRoster.Count();
 
-                    if (PilotCount <= 8)
+                    if (PilotCount <= 6)
                     {
                         DeploymentSalaryMult = DeploymentSalaryMult - 2;
                     }
-                    else if (PilotCount <= 16 && PilotCount > 8)
+                    else if (PilotCount <= 12 && PilotCount > 6)
                     {
                         DeploymentSalaryMult = DeploymentSalaryMult - 1;
                     }
@@ -625,15 +626,15 @@ namespace MercDeployments {
                         float MaxDeployments = settings.MaxDeploymentsPerMonth;
 
                         int PilotCount = __instance.PilotRoster.Count();
-                        if(PilotCount <= 8)
+                        if(PilotCount <= 6)
                         {
                             MissionChance = MissionChance - 0.1;
-                            MaxDeployments = MaxDeployments - 2;
+                            MaxDeployments = MaxDeployments - 4;
                         }
-                        else if(PilotCount <=16 && PilotCount > 8)
+                        else if(PilotCount <=12 && PilotCount > 6)
                         {
                             MissionChance = MissionChance - 0.5;
-                            MaxDeployments = MaxDeployments - 1;
+                            MaxDeployments = MaxDeployments - 2;
                         }
 
                         MissionChance = MissionChance + ((double)__instance.Constants.Finances.QuarterLength - (double)__instance.DayRemainingInQuarter) / (100.0 * ((double)Fields.MissionsDoneCurrentMonth + 1.0));
