@@ -123,7 +123,7 @@ namespace MercDeployments {
                     }
 
                     contract.SetInitialReward(Mathf.RoundToInt(contract.InitialContractValue * DeploymentSalaryMult));
-                    contract.Override.difficultyUIModifier = 2;
+                    contract.Override.difficultyUIModifier = 0;
                     System.Random rand = new System.Random();
                     int numberOfMonth = rand.Next(1, settings.MaxMonth + 1);
                     Fields.AlreadyRaised.Add(contract.Name, numberOfMonth);
