@@ -113,13 +113,17 @@ namespace MercDeployments {
                     float DeploymentSalaryMult = settings.DeploymentSalaryMultiplier;
                     int PilotCount = sim.PilotRoster.Count();
 
-                    if (PilotCount <= 6)
+                    if (PilotCount <= 7)
                     {
                         DeploymentSalaryMult = DeploymentSalaryMult - 2;
                     }
-                    else if (PilotCount <= 12 && PilotCount > 6)
+                    else if (PilotCount <= 13 && PilotCount > 7)
                     {
                         DeploymentSalaryMult = DeploymentSalaryMult - 1;
+                    }
+                    else if (PilotCount > 17)
+                    {
+                        DeploymentSalaryMult = DeploymentSalaryMult + 2;
                     }
 
                     contract.SetInitialReward(Mathf.RoundToInt(contract.InitialContractValue * DeploymentSalaryMult));
@@ -626,15 +630,20 @@ namespace MercDeployments {
                         float MaxDeployments = settings.MaxDeploymentsPerMonth;
 
                         int PilotCount = __instance.PilotRoster.Count();
-                        if(PilotCount <= 6)
+                        if(PilotCount <= 7)
                         {
                             MissionChance = MissionChance - 0.1;
                             MaxDeployments = MaxDeployments - 4;
                         }
-                        else if(PilotCount <=12 && PilotCount > 6)
+                        else if(PilotCount <=13 && PilotCount > 7)
                         {
                             MissionChance = MissionChance - 0.05;
                             MaxDeployments = MaxDeployments - 2;
+                        }
+                        else if (PilotCount > 17)
+                        {
+                            MissionChance = MissionChance + 0.1;
+                            MaxDeployments = MaxDeployments + 4;
                         }
 
                         MissionChance = MissionChance + ((double)__instance.Constants.Finances.QuarterLength - (double)__instance.DayRemainingInQuarter) / (100.0 * ((double)Fields.MissionsDoneCurrentMonth + 1.0));
