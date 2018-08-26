@@ -665,7 +665,8 @@ namespace MercDeployments {
                             MaxDeployments = MaxDeployments + 4;
                         }
 
-                        MissionChance = MissionChance + ((double)__instance.Constants.Finances.QuarterLength - (double)__instance.DayRemainingInQuarter) / (100.0 * ((double)Fields.MissionsDoneCurrentMonth + 1.0));
+                        MissionChance = MissionChance + (__instance.Constants.Finances.QuarterLength - 
+                            (Fields.DeploymentRemainingDays%__instance.Constants.Finances.QuarterLength)) / (100.0 * (Fields.MissionsDoneCurrentMonth + 1.0));
 
                         if (Fields.MissionsDoneCurrentMonth >= (int)MaxDeployments)
                         {
