@@ -11,6 +11,8 @@ namespace MercDeployments {
         public int DeploymentBreakRepCost = -30;
         public int DeploymentBreakMRBRepCost = -50;
         public float BonusPercentage = 0.05f;
+        public float MaxDeploymentPercentage = 1f;
+        public float MaxDeploymentsPerMonth = 6;
     }
     
     public static class Fields {

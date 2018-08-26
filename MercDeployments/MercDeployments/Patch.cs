@@ -107,12 +107,28 @@ namespace MercDeployments {
 
     [HarmonyPatch(typeof(SGContractsListItem), "Init")]
     public static class SGContractsListItem_Init_Patch {
-        static void Prefix(SGContractsListItem __instance, Contract contract) {
+        static void Prefix(SGContractsListItem __instance, Contract contract, SimGameState sim) {
             try {
                 if (contract.Override.travelOnly && !Fields.AlreadyRaised.ContainsKey(contract.Name) && !contract.IsPriorityContract) {
                     Settings settings = Helper.LoadSettings();
-                    contract.SetInitialReward(Mathf.RoundToInt(contract.InitialContractValue * settings.DeploymentSalaryMultiplier));
-                    contract.Override.difficultyUIModifier = 2;
+                    float DeploymentSalaryMult = settings.DeploymentSalaryMultiplier;
+                    int PilotCount = sim.PilotRoster.Count();
+
+                    if (PilotCount <= 7)
+                    {
+                        DeploymentSalaryMult = DeploymentSalaryMult - 2;
+                    }
+                    else if (PilotCount <= 13 && PilotCount > 7)
+                    {
+                        DeploymentSalaryMult = DeploymentSalaryMult - 1;
+                    }
+                    else if (PilotCount > 17)
+                    {
+                        DeploymentSalaryMult = DeploymentSalaryMult + 2;
+                    }
+
+                    contract.SetInitialReward(Mathf.RoundToInt(contract.InitialContractValue * DeploymentSalaryMult));
+                    contract.Override.difficultyUIModifier = 0;
                     System.Random rand = new System.Random();
                     int numberOfMonth = rand.Next(1, settings.MaxMonth + 1);
                     Fields.AlreadyRaised.Add(contract.Name, numberOfMonth);
@@ -588,12 +604,13 @@ namespace MercDeployments {
         static void Prefix(SimGameState __instance, int timeLapse) {
             try {
                 int num = (timeLapse <= 0) ? 1 : timeLapse;
-                if ((__instance.DayRemainingInQuarter - num <= 0)) {
+                if (Fields.Deployment)
+                {
+                    Fields.DeploymentRemainingDays -= num;
+                }
+                if (Fields.DeploymentRemainingDays%__instance.Constants.Finances.QuarterLength == 0) {
                     Fields.PaymentCall = true;
                     Fields.MissionsDoneCurrentMonth = 0;
-                }
-                if (Fields.Deployment) {
-                    Fields.DeploymentRemainingDays -= num;
                 }
                 if (Fields.TimeLineEntry != null) {
                     Fields.TimeLineEntry.PayCost(num);
@@ -628,8 +645,35 @@ namespace MercDeployments {
                     else {
                         Settings settings = Helper.LoadSettings();
                         System.Random rand = new System.Random();
-                        int ChanceDivider = Mathf.Max(1, 2 ^ ((Fields.MissionsDoneCurrentMonth + 1) - Mathf.RoundToInt((__instance.Constants.Finances.QuarterLength * settings.MissionChancePerDay))));
-                        if (rand.NextDouble() < settings.MissionChancePerDay / ChanceDivider) {
+                        double MissionChance = settings.MissionChancePerDay;
+                        float MaxDeployments = settings.MaxDeploymentsPerMonth;
+
+                        int PilotCount = __instance.PilotRoster.Count();
+                        if (PilotCount <= 7)
+                        {
+                            MissionChance = MissionChance - 0.1;
+                            MaxDeployments = MaxDeployments - 4;
+                        }
+                        else if (PilotCount <= 13 && PilotCount > 7)
+                        {
+                            MissionChance = MissionChance - 0.05;
+                            MaxDeployments = MaxDeployments - 2;
+                        }
+                        else if (PilotCount > 17)
+                        {
+                            MissionChance = MissionChance + 0.1;
+                            MaxDeployments = MaxDeployments + 4;
+                        }
+
+                        MissionChance = MissionChance + ((double)__instance.Constants.Finances.QuarterLength - (double)__instance.DayRemainingInQuarter) / (100.0 * ((double)Fields.MissionsDoneCurrentMonth + 1.0));
+
+                        if (Fields.MissionsDoneCurrentMonth >= (int)MaxDeployments)
+                        {
+                            MissionChance = 0;
+                        }
+
+                        if (rand.NextDouble() < MissionChance)
+                        {
                             __instance.PauseTimer();
                             __instance.StopPlayMode();
 
