@@ -665,8 +665,7 @@ namespace MercDeployments {
                             MaxDeployments = MaxDeployments + 4;
                         }
 
-                        MissionChance = MissionChance + (__instance.Constants.Finances.QuarterLength - 
-                            (Fields.DeploymentRemainingDays%__instance.Constants.Finances.QuarterLength)) / (100.0 * (Fields.MissionsDoneCurrentMonth + 1.0));
+                        MissionChance = MissionChance + (double)Fields.DaysSinceLastMission / 100;
 
                         if (Fields.MissionsDoneCurrentMonth >= (int)MaxDeployments)
                         {
@@ -706,12 +705,16 @@ namespace MercDeployments {
                             newcon.Override.OnContractSuccessResults.Add(simGameEventResult);
                             AccessTools.Field(typeof(SimGameState), "activeBreadcrumb").SetValue(__instance, newcon);
                             Fields.DeploymentContracts.Add(newcon.Name, newcon);
-                            Action primaryAction = delegate () {
+                            Action primaryAction = delegate ()
+                            {
                                 __instance.QueueCompleteBreadcrumbProcess(true);
                             };
                             interruptQueue.QueueTravelPauseNotification("New Mission", "Our Employer has a new mission for us.", __instance.GetCrewPortrait(SimGameCrew.Crew_Darius),
                             string.Empty, new Action(primaryAction), "Proceed", new Action(__instance.OnBreadcrumbWait), "Not Yet");
+                            Fields.DaysSinceLastMission = 0;
                         }
+                        else
+                            Fields.DaysSinceLastMission = Fields.DaysSinceLastMission + 1;
                     }
                 }
             }

@@ -28,6 +28,7 @@ namespace MercDeployments {
         public static int DeploymentLenght = 0;
         public static int DeploymentRemainingDays = 0;
         public static int MissionsDoneCurrentMonth = 0;
+        public static int DaysSinceLastMission = 0;
 
 
         public static Dictionary<string, Contract> DeploymentContracts = new Dictionary<string, Contract>();
