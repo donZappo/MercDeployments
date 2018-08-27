@@ -111,24 +111,23 @@ namespace MercDeployments {
             try {
                 if (contract.Override.travelOnly && !Fields.AlreadyRaised.ContainsKey(contract.Name) && !contract.IsPriorityContract) {
                     Settings settings = Helper.LoadSettings();
-                    double DeploymentSalaryMult = settings.DeploymentSalaryMultiplier;
+                    float DeploymentSalaryMult = settings.DeploymentSalaryMultiplier;
                     int PilotCount = sim.PilotRoster.Count();
-                    int difficulty = Fields.DeploymentDifficulty;
 
                     if (PilotCount <= 7)
                     {
-                        DeploymentSalaryMult = DeploymentSalaryMult - 3 + (difficulty - 6) * 0.2;
+                        DeploymentSalaryMult = DeploymentSalaryMult - 2;
                     }
                     else if (PilotCount <= 13 && PilotCount > 7)
                     {
-                        DeploymentSalaryMult = DeploymentSalaryMult + (difficulty - 6) * 0.2;
+                        DeploymentSalaryMult = DeploymentSalaryMult - 1;
                     }
-                    else if (PilotCount > 13)
+                    else if (PilotCount > 17)
                     {
-                        DeploymentSalaryMult = DeploymentSalaryMult + 3 + (difficulty - 6) * 0.2;
+                        DeploymentSalaryMult = DeploymentSalaryMult + 2;
                     }
 
-                    contract.SetInitialReward(Mathf.RoundToInt(contract.InitialContractValue * (float)DeploymentSalaryMult));
+                    contract.SetInitialReward(Mathf.RoundToInt(contract.InitialContractValue * DeploymentSalaryMult));
                     contract.Override.difficultyUIModifier = 0;
                     System.Random rand = new System.Random();
                     int numberOfMonth = rand.Next(1, settings.MaxMonth + 1);
@@ -650,27 +649,25 @@ namespace MercDeployments {
                         System.Random rand = new System.Random();
                         double MissionChance = settings.MissionChancePerDay;
                         float MaxDeployments = settings.MaxDeploymentsPerMonth;
-                        int difficulty = Fields.DeploymentDifficulty;
 
                         int PilotCount = __instance.PilotRoster.Count();
                         if (PilotCount <= 7)
                         {
-                            MissionChance = MissionChance - 0.25 + (difficulty - 6) * 0.01;
-                            MaxDeployments = MaxDeployments - 6 + (difficulty - 6) * 0.5f;
+                            MissionChance = MissionChance - 0.1;
+                            MaxDeployments = MaxDeployments - 4;
                         }
                         else if (PilotCount <= 13 && PilotCount > 7)
                         {
-                            MissionChance = MissionChance + (difficulty - 6) * 0.01;
-                            MaxDeployments = MaxDeployments + (difficulty - 6) * 0.5f;
+                            MissionChance = MissionChance - 0.05;
+                            MaxDeployments = MaxDeployments - 2;
                         }
-                        else if (PilotCount > 13)
+                        else if (PilotCount > 17)
                         {
-                            MissionChance = MissionChance + 0.25 + (difficulty - 6) * 0.01;
-                            MaxDeployments = MaxDeployments + 6 + (difficulty - 6) * 0.5f;
+                            MissionChance = MissionChance + 0.1;
+                            MaxDeployments = MaxDeployments + 4;
                         }
 
-                        MissionChance = MissionChance + (__instance.Constants.Finances.QuarterLength - 
-                            (Fields.DeploymentRemainingDays%__instance.Constants.Finances.QuarterLength)) / (100.0 * (Fields.MissionsDoneCurrentMonth + 1.0));
+                        MissionChance = MissionChance + (double)Fields.DaysSinceLastMission / 100;
 
                         if (Fields.MissionsDoneCurrentMonth >= (int)MaxDeployments)
                         {
