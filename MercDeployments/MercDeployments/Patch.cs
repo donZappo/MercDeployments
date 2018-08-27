@@ -327,6 +327,7 @@ namespace MercDeployments {
                     Fields.DeploymentRemainingDays = __instance.Constants.Finances.QuarterLength * Fields.DeploymentLenght;
                     Fields.TimeLineEntry = new WorkOrderEntry_Notification(WorkOrderType.NotificationGeneric, "Deployment End", "Deployment End");
                     Fields.TimeLineEntry.SetCost(Fields.DeploymentRemainingDays);
+                    Fields.DaysSinceLastMission = 0;
                     __instance.RoomManager.AddWorkQueueEntry(Fields.TimeLineEntry);
                     __instance.RoomManager.SortTimeline();
                     __instance.RoomManager.RefreshTimeline();
@@ -611,6 +612,7 @@ namespace MercDeployments {
                 if (Fields.DeploymentRemainingDays%__instance.Constants.Finances.QuarterLength == 0) {
                     Fields.PaymentCall = true;
                     Fields.MissionsDoneCurrentMonth = 0;
+                    Fields.DaysSinceLastMission = 0;
                 }
                 if (Fields.TimeLineEntry != null) {
                     Fields.TimeLineEntry.PayCost(num);
