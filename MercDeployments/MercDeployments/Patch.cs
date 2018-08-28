@@ -115,17 +115,17 @@ namespace MercDeployments {
                     int PilotCount = sim.PilotRoster.Count();
                     int difficulty = Fields.DeploymentDifficulty;
 
-                    if (PilotCount <= 7)
+                    if (PilotCount <= settings.PilotLimitLow)
                     {
-                        DeploymentSalaryMult = DeploymentSalaryMult - 3 + (difficulty - 6) * 0.2;
+                        DeploymentSalaryMult = DeploymentSalaryMult + settings.PayMultiplier_Low + (difficulty - 6) * settings.PayMultiplierAdjustment;
                     }
-                    else if (PilotCount <= 13 && PilotCount > 7)
+                    else if (PilotCount <= settings.PilotLimitMedium && PilotCount > settings.PilotLimitLow)
                     {
-                        DeploymentSalaryMult = DeploymentSalaryMult + (difficulty - 6) * 0.2;
+                        DeploymentSalaryMult = DeploymentSalaryMult + settings.PayMultiplier_Medium + (difficulty - 6) * settings.PayMultiplierAdjustment;
                     }
-                    else if (PilotCount > 13)
+                    else if (PilotCount > settings.PilotLimitMedium)
                     {
-                        DeploymentSalaryMult = DeploymentSalaryMult + 3 + (difficulty - 6) * 0.2;
+                        DeploymentSalaryMult = DeploymentSalaryMult + settings.PayMultiplier_High + (difficulty - 6) * settings.PayMultiplierAdjustment;
                     }
 
                     contract.SetInitialReward(Mathf.RoundToInt(contract.InitialContractValue * (float)DeploymentSalaryMult));
@@ -133,6 +133,7 @@ namespace MercDeployments {
                     System.Random rand = new System.Random();
                     int numberOfMonth = rand.Next(1, settings.MaxMonth + 1);
                     Fields.AlreadyRaised.Add(contract.Name, numberOfMonth);
+                    Fields.DaysSinceLastMission = 0;
                 }
             }
             catch (Exception e) {
@@ -612,6 +613,7 @@ namespace MercDeployments {
                 if (Fields.DeploymentRemainingDays%__instance.Constants.Finances.QuarterLength == 0) {
                     Fields.PaymentCall = true;
                     Fields.MissionsDoneCurrentMonth = 0;
+                    Fields.DaysSinceLastMission = 0;
                 }
                 if (Fields.TimeLineEntry != null) {
                     Fields.TimeLineEntry.PayCost(num);
@@ -649,26 +651,29 @@ namespace MercDeployments {
                         double MissionChance = settings.MissionChancePerDay;
                         float MaxDeployments = settings.MaxDeploymentsPerMonth;
                         int difficulty = Fields.DeploymentDifficulty;
+                        double MissionChanceMod = 0;
 
                         int PilotCount = __instance.PilotRoster.Count();
-                        if (PilotCount <= 7)
+                        if (PilotCount <= settings.PilotLimitLow)
                         {
-                            MissionChance = MissionChance - 0.25 + (difficulty - 6) * 0.01;
-                            MaxDeployments = MaxDeployments - 6 + (difficulty - 6) * 0.5f;
+                            MissionChance = MissionChance + settings.DCV_Low + (difficulty - 6) * settings.DCV_Adjustment;
+                            MaxDeployments = MaxDeployments + settings.MaxContracts_Low + (difficulty - 6) * (float)settings.MaxContractsAdjustment;
+                            MissionChanceMod = Fields.DaysSinceLastMission * settings.PercentChangeLow;
                         }
-                        else if (PilotCount <= 13 && PilotCount > 7)
+                        else if (PilotCount <= settings.PilotLimitMedium && PilotCount > settings.PilotLimitLow)
                         {
-                            MissionChance = MissionChance + (difficulty - 6) * 0.01;
-                            MaxDeployments = MaxDeployments + (difficulty - 6) * 0.5f;
+                            MissionChance = MissionChance + settings.DCV_Medium + (difficulty - 6) * settings.DCV_Adjustment;
+                            MaxDeployments = MaxDeployments + settings.MaxContracts_Medium + (difficulty - 6) * (float)settings.MaxContractsAdjustment;
+                            MissionChanceMod = Fields.DaysSinceLastMission * settings.PercentChangeMedium;
                         }
-                        else if (PilotCount > 13)
+                        else if (PilotCount > settings.PilotLimitMedium)
                         {
-                            MissionChance = MissionChance + 0.25 + (difficulty - 6) * 0.01;
-                            MaxDeployments = MaxDeployments + 6 + (difficulty - 6) * 0.5f;
+                            MissionChance = MissionChance + settings.DCV_High + (difficulty - 6) * settings.DCV_Adjustment;
+                            MaxDeployments = MaxDeployments + settings.MaxContracts_High + (difficulty - 6) * (float)settings.MaxContractsAdjustment;
+                            MissionChanceMod = Fields.DaysSinceLastMission * settings.PercentChangeHigh;
                         }
 
-                        MissionChance = MissionChance + (__instance.Constants.Finances.QuarterLength - 
-                            (Fields.DeploymentRemainingDays%__instance.Constants.Finances.QuarterLength)) / (100.0 * (Fields.MissionsDoneCurrentMonth + 1.0));
+                        MissionChance = MissionChance + MissionChanceMod;
 
                         if (Fields.MissionsDoneCurrentMonth >= (int)MaxDeployments)
                         {
@@ -713,7 +718,10 @@ namespace MercDeployments {
                             };
                             interruptQueue.QueueTravelPauseNotification("New Mission", "Our Employer has a new mission for us.", __instance.GetCrewPortrait(SimGameCrew.Crew_Darius),
                             string.Empty, new Action(primaryAction), "Proceed", new Action(__instance.OnBreadcrumbWait), "Not Yet");
+                            Fields.DaysSinceLastMission = 0;
                         }
+                        else
+                            Fields.DaysSinceLastMission = Fields.DaysSinceLastMission + 1;
                     }
                 }
             }
