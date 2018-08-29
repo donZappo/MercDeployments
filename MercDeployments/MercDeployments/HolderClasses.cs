@@ -57,6 +57,7 @@ namespace MercDeployments {
         public static bool SkipPreparePostfix = false;
         public static bool PaymentCall = false;
         public static WorkOrderEntry_Notification TimeLineEntry = null;
+        public static WorkOrderEntry_Notification PaymentTime = null;
     }
 
     public struct PotentialContract {

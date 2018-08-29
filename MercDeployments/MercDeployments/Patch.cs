@@ -175,7 +175,9 @@ namespace MercDeployments {
     public static class TaskTimelineWidget_RemoveEntry_Patch {
         static bool Prefix(WorkOrderEntry entry) {
             try {
-                if (Fields.Deployment && entry.ID.Equals("Deployment End")) {
+                if (Fields.Deployment && entry.ID.Equals("Deployment Payment") && (Fields.DeploymentRemainingDays % 30 == 0) && Fields.DeploymentRemainingDays != Fields.DeploymentLenght * 30)
+                    return true;
+                if (Fields.Deployment && (entry.ID.Equals("Deployment End") || entry.ID.Equals("Deployment Payment"))) {
                     return false;
                 }
                 return true;
@@ -187,6 +189,7 @@ namespace MercDeployments {
         }
     }
 
+
     [HarmonyPatch(typeof(TaskTimelineWidget), "RegenerateEntries")]
     public static class TaskTimelineWidget_RegenerateEntries_Patch {
         static void Postfix(TaskTimelineWidget __instance) {
@@ -197,6 +200,12 @@ namespace MercDeployments {
                         Fields.TimeLineEntry.SetCost(Fields.DeploymentRemainingDays);
                     }
                     __instance.AddEntry(Fields.TimeLineEntry, false);
+                    if (Fields.PaymentTime == null)
+                    {
+                        Fields.PaymentTime = new WorkOrderEntry_Notification(WorkOrderType.NotificationGeneric, "Deployment Payment", "Deployment Payment");
+                        Fields.PaymentTime.SetCost(Fields.DeploymentRemainingDays%30);
+                    }
+                    __instance.AddEntry(Fields.PaymentTime, false);
                     __instance.RefreshEntries();
                 }
             }
@@ -329,7 +338,10 @@ namespace MercDeployments {
                     Fields.DeploymentRemainingDays = __instance.Constants.Finances.QuarterLength * Fields.DeploymentLenght;
                     Fields.TimeLineEntry = new WorkOrderEntry_Notification(WorkOrderType.NotificationGeneric, "Deployment End", "Deployment End");
                     Fields.TimeLineEntry.SetCost(Fields.DeploymentRemainingDays);
+                    Fields.PaymentTime = new WorkOrderEntry_Notification(WorkOrderType.NotificationGeneric, "Deployment Payment", "Deployment Payment");
+                    Fields.PaymentTime.SetCost(__instance.Constants.Finances.QuarterLength);
                     __instance.RoomManager.AddWorkQueueEntry(Fields.TimeLineEntry);
+                    __instance.RoomManager.AddWorkQueueEntry(Fields.PaymentTime);
                     __instance.RoomManager.SortTimeline();
                     __instance.RoomManager.RefreshTimeline();
                     Fields.DeploymentContracts = new Dictionary<string, Contract>();
@@ -518,19 +530,19 @@ namespace MercDeployments {
         }
     }
 
-    [HarmonyPatch(typeof(SimGameState), "GetExpenditures")]
-    public static class SimGameState_GetExpenditures_Patch {
-        static void Postfix(ref SimGameState __instance, ref int __result) {
-            try {
-                if (Fields.Deployment && ((__instance.DayRemainingInQuarter <= Fields.DeploymentRemainingDays) || Fields.PaymentCall)) {
-                    __result -= Fields.DeploymentSalary;
-                }
-            }
-            catch (Exception e) {
-                Logger.LogError(e);
-            }
-        }
-    }
+    //[HarmonyPatch(typeof(SimGameState), "GetExpenditures")]
+    //public static class SimGameState_GetExpenditures_Patch {
+    //    static void Postfix(ref SimGameState __instance, ref int __result) {
+    //        try {
+    //            if (Fields.Deployment && ((__instance.DayRemainingInQuarter <= Fields.DeploymentRemainingDays) || Fields.PaymentCall)) {
+    //                __result -= Fields.DeploymentSalary;
+    //            }
+    //        }
+    //        catch (Exception e) {
+    //            Logger.LogError(e);
+    //        }
+    //    }
+    //}
 
 
     [HarmonyPatch(typeof(SGCaptainsQuartersStatusScreen), "RefreshData")]
@@ -550,12 +562,12 @@ namespace MercDeployments {
         static void Postfix(SGCaptainsQuartersStatusScreen __instance) {
             try {
                 SimGameState simState = (SimGameState)AccessTools.Field(typeof(SGCaptainsQuartersStatusScreen), "simState").GetValue(__instance);
-                if (Fields.Deployment && (simState.DayRemainingInQuarter <= Fields.DeploymentRemainingDays)) {
-                    ReflectionHelper.InvokePrivateMethode(__instance, "AddListLineItem", new object[] { ReflectionHelper.GetPrivateField(__instance, "SectionOneExpensesList"), "Deployment Salary", SimGameState.GetCBillString(0 - Fields.DeploymentSalary) });
-                    TextMeshProUGUI SectionOneExpensesField = (TextMeshProUGUI)ReflectionHelper.GetPrivateField(__instance, "SectionOneExpensesField");
-                    int newTotal = int.Parse(SectionOneExpensesField.text.Replace("¢", "").Replace(",", ""));
-                    ReflectionHelper.InvokePrivateMethode(__instance, "SetField", new object[] { SectionOneExpensesField, SimGameState.GetCBillString(newTotal - Fields.DeploymentSalary) }, new Type[] { typeof(TextMeshProUGUI), typeof(string) });
-                }
+                //if (Fields.Deployment && (simState.DayRemainingInQuarter <= Fields.DeploymentRemainingDays)) {
+                //    ReflectionHelper.InvokePrivateMethode(__instance, "AddListLineItem", new object[] { ReflectionHelper.GetPrivateField(__instance, "SectionOneExpensesList"), "Deployment Salary", SimGameState.GetCBillString(0 - Fields.DeploymentSalary) });
+                //    TextMeshProUGUI SectionOneExpensesField = (TextMeshProUGUI)ReflectionHelper.GetPrivateField(__instance, "SectionOneExpensesField");
+                //    int newTotal = int.Parse(SectionOneExpensesField.text.Replace("¢", "").Replace(",", ""));
+                //    ReflectionHelper.InvokePrivateMethode(__instance, "SetField", new object[] { SectionOneExpensesField, SimGameState.GetCBillString(newTotal - Fields.DeploymentSalary) }, new Type[] { typeof(TextMeshProUGUI), typeof(string) });
+                //}
                 Fields.InvertCBills = false;
                 SGFinancialForecastWidget FinanceWidget = (SGFinancialForecastWidget)AccessTools.Field(typeof(SGCaptainsQuartersStatusScreen), "FinanceWidget").GetValue(__instance);
                 FinanceWidget.RefreshData();
@@ -610,10 +622,14 @@ namespace MercDeployments {
                 {
                     Fields.DeploymentRemainingDays -= num;
                 }
-                if (Fields.DeploymentRemainingDays%__instance.Constants.Finances.QuarterLength == 0) {
+                if (Fields.Deployment && Fields.DeploymentRemainingDays%__instance.Constants.Finances.QuarterLength == 0 && Fields.DeploymentRemainingDays != Fields.DeploymentLenght * 30) {
                     Fields.PaymentCall = true;
                     Fields.MissionsDoneCurrentMonth = 0;
                     Fields.DaysSinceLastMission = 0;
+                    __instance.AddFunds(Fields.DeploymentSalary);
+                    SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(__instance);
+                    interruptQueue.QueueGenericPopup("Deployment Payment", "Commander, we just received the payment of " + Fields.DeploymentSalary.ToString("N0") + " C-Bills for last month's deployment service.");
+                   
                 }
                 if (Fields.TimeLineEntry != null) {
                     Fields.TimeLineEntry.PayCost(num);
@@ -622,6 +638,17 @@ namespace MercDeployments {
                     Dictionary<WorkOrderEntry, TaskManagementElement> ActiveItems = (Dictionary<WorkOrderEntry, TaskManagementElement>)AccessTools.Field(typeof(TaskTimelineWidget), "ActiveItems").GetValue(timelineWidget);
                     if (ActiveItems.TryGetValue(Fields.TimeLineEntry, out taskManagementElement4)) {
                         taskManagementElement4.UpdateItem(0);
+                    }
+                }
+                if (Fields.PaymentTime != null)
+                {
+                    Fields.PaymentTime.PayCost(num);
+                    TaskManagementElement taskManagementElement5 = null;
+                    TaskTimelineWidget timelineWidget2 = (TaskTimelineWidget)AccessTools.Field(typeof(SGRoomManager), "timelineWidget").GetValue(__instance.RoomManager);
+                    Dictionary<WorkOrderEntry, TaskManagementElement> ActiveItems = (Dictionary<WorkOrderEntry, TaskManagementElement>)AccessTools.Field(typeof(TaskTimelineWidget), "ActiveItems").GetValue(timelineWidget2);
+                    if (ActiveItems.TryGetValue(Fields.PaymentTime, out taskManagementElement5))
+                    {
+                        taskManagementElement5.UpdateItem(0);
                     }
                 }
             }
@@ -646,7 +673,24 @@ namespace MercDeployments {
 
                     }
                     else {
-                        Settings settings = Helper.LoadSettings();
+
+                        try
+                        {
+                            if (Fields.Deployment && Fields.DeploymentRemainingDays % 30 == 29)
+                            {
+                                Fields.PaymentTime = new WorkOrderEntry_Notification(WorkOrderType.NotificationGeneric, "Deployment Payment", "Deployment Payment");
+                                Fields.PaymentTime.SetCost(29);
+                                __instance.RoomManager.AddWorkQueueEntry(Fields.PaymentTime);
+                                __instance.RoomManager.SortTimeline();
+                                __instance.RoomManager.RefreshTimeline();
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.LogError(e);
+                        }
+
+                    Settings settings = Helper.LoadSettings();
                         System.Random rand = new System.Random();
                         double MissionChance = settings.MissionChancePerDay;
                         float MaxDeployments = settings.MaxDeploymentsPerMonth;
