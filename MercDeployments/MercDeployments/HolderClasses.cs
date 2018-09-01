@@ -48,6 +48,7 @@ namespace MercDeployments {
         public static int DeploymentRemainingDays = 0;
         public static int MissionsDoneCurrentMonth = 0;
         public static int DaysSinceLastMission = 0;
+        public static bool MissionWithdraw = false;
 
 
         public static Dictionary<string, Contract> DeploymentContracts = new Dictionary<string, Contract>();

@@ -41,6 +41,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\..\References\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
+    <Reference Include="Assembly-CSharp_publicized">
+      <HintPath>..\..\..\..\..\..\..\References\Assembly-CSharp_publicized.dll</HintPath>
+    </Reference>
     <Reference Include="Dapper.Unity">
       <HintPath>..\..\..\..\..\..\..\References\Dapper.Unity.dll</HintPath>
     </Reference>

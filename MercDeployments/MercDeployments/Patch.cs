@@ -194,23 +194,19 @@ namespace MercDeployments {
     public static class TaskTimelineWidget_RegenerateEntries_Patch {
         static void Postfix(TaskTimelineWidget __instance) {
             try {
-                if (Fields.Deployment) {
-                    if (Fields.TimeLineEntry == null) {
-                        Fields.TimeLineEntry = new WorkOrderEntry_Notification(WorkOrderType.NotificationGeneric, "Deployment End", "Deployment End");
-                        Fields.TimeLineEntry.SetCost(Fields.DeploymentRemainingDays);
-                    }
+                if (Fields.Deployment)
+                {
+                    Fields.TimeLineEntry = new WorkOrderEntry_Notification(WorkOrderType.NotificationGeneric, "Deployment End", "Deployment End");
+                    Fields.TimeLineEntry.SetCost(Fields.DeploymentRemainingDays);
                     __instance.AddEntry(Fields.TimeLineEntry, false);
-                    if (Fields.PaymentTime == null)
-                    {
-                        Fields.PaymentTime = new WorkOrderEntry_Notification(WorkOrderType.NotificationGeneric, "Deployment Payment", "Deployment Payment");
-                        int PaymentDays = Fields.DeploymentRemainingDays % 30;
-                        if (PaymentDays == 0 && Fields.DeploymentRemainingDays != 0)
-                            PaymentDays = 30;
-                        Fields.PaymentTime.SetCost(PaymentDays);
-                        __instance.AddEntry(Fields.PaymentTime, false);
-                    }
-                    __instance.RefreshEntries();
+                    Fields.PaymentTime = new WorkOrderEntry_Notification(WorkOrderType.NotificationGeneric, "Deployment Payment", "Deployment Payment");
+                    int PaymentDays = Fields.DeploymentRemainingDays % 30;
+                    if (PaymentDays == 0 && Fields.DeploymentRemainingDays != 0)
+                        PaymentDays = 30;
+                    Fields.PaymentTime.SetCost(PaymentDays);
+                    __instance.AddEntry(Fields.PaymentTime, false);
                 }
+                __instance.RefreshEntries();
             }
             catch (Exception e) {
                 Logger.LogError(e);
@@ -281,6 +277,7 @@ namespace MercDeployments {
                             AccessTools.Field(typeof(SimGameState), "activeBreadcrumb").SetValue(__instance, contract);
                         }
                         Fields.DeploymentContracts.Add(contract.Name, contract);
+                        Fields.MissionWithdraw = false;
                     }
                 }
             }
@@ -349,6 +346,7 @@ namespace MercDeployments {
                     __instance.RoomManager.RefreshTimeline();
                     Fields.DeploymentContracts = new Dictionary<string, Contract>();
                     Fields.DeploymentContracts.Add(__instance.ActiveTravelContract.Name, __instance.ActiveTravelContract);
+                    Fields.MissionWithdraw = false;
                 }
             }
             catch (Exception e) {
@@ -616,6 +614,16 @@ namespace MercDeployments {
         }
     }
 
+    [HarmonyPatch(typeof(CombatHUDRetreatEscMenu), "OnRetreatConfirmed")]
+    public static class SimGameState_OnRetreat_Patch
+    {
+        static void Postfix()
+        {
+            Fields.MissionWithdraw = true;
+        }
+    }
+
+
     [HarmonyPatch(typeof(SimGameState), "OnDayPassed")]
     public static class SimGameState_OnDayPassed_Patch {
         static void Prefix(SimGameState __instance, int timeLapse) {
@@ -664,6 +672,20 @@ namespace MercDeployments {
             try {
                 Fields.PaymentCall = false;
                 if (Fields.Deployment) {
+                    if (Fields.MissionWithdraw)
+                    {
+                        __instance.StopPlayMode();
+                        Fields.Deployment = false;
+                        SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(__instance);
+                        interruptQueue.QueueGenericPopup("Deployment Over", "Failure to complete mission ends Deployment.");
+                        Fields.DeploymentContracts = new Dictionary<string, Contract>();
+                        __instance.CurSystem.SystemContracts.Clear();
+                        __instance.RoomManager.RefreshTimeline();
+                        //AccessTools.Field(typeof(SimGameState), "activeBreadcrumb").SetValue(__instance, null);
+                        __instance.CurSystem.GenerateInitialContracts();
+                    }
+
+
                     if (Fields.DeploymentRemainingDays <= 0) {
                         __instance.StopPlayMode();
                         Fields.Deployment = false;
@@ -672,8 +694,8 @@ namespace MercDeployments {
                         Fields.DeploymentContracts = new Dictionary<string, Contract>();
                         __instance.CurSystem.SystemContracts.Clear();
                         __instance.RoomManager.RefreshTimeline();
-                        AccessTools.Field(typeof(SimGameState), "activeBreadcrumb").SetValue(__instance, null);
-
+                        //AccessTools.Field(typeof(SimGameState), "activeBreadcrumb").SetValue(__instance, null);
+                        __instance.CurSystem.GenerateInitialContracts();
                     }
                     else {
 
@@ -726,6 +748,7 @@ namespace MercDeployments {
                         {
                             MissionChance = 0;
                         }
+                        MissionChance = 0;
 
                         if (rand.NextDouble() < MissionChance)
                         {
