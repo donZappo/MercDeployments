@@ -203,9 +203,12 @@ namespace MercDeployments {
                     if (Fields.PaymentTime == null)
                     {
                         Fields.PaymentTime = new WorkOrderEntry_Notification(WorkOrderType.NotificationGeneric, "Deployment Payment", "Deployment Payment");
-                        Fields.PaymentTime.SetCost(Fields.DeploymentRemainingDays%30);
+                        int PaymentDays = Fields.DeploymentRemainingDays % 30;
+                        if (PaymentDays == 0 && Fields.DeploymentRemainingDays != 0)
+                            PaymentDays = 30;
+                        Fields.PaymentTime.SetCost(PaymentDays);
+                        __instance.AddEntry(Fields.PaymentTime, false);
                     }
-                    __instance.AddEntry(Fields.PaymentTime, false);
                     __instance.RefreshEntries();
                 }
             }
