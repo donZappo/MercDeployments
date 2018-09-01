@@ -748,7 +748,6 @@ namespace MercDeployments {
                         {
                             MissionChance = 0;
                         }
-                        MissionChance = 0;
 
                         if (rand.NextDouble() < MissionChance)
                         {
