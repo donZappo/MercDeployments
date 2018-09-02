@@ -640,7 +640,9 @@ namespace MercDeployments {
                     __instance.AddFunds(Fields.DeploymentSalary);
                     SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(__instance);
                     interruptQueue.QueueGenericPopup("Deployment Payment", "Commander, we just received the payment of " + Fields.DeploymentSalary.ToString("N0") + " C-Bills for last month's deployment service.");
-                   
+                    
+                    __instance.StopPlayMode();
+
                 }
                 if (Fields.TimeLineEntry != null) {
                     Fields.TimeLineEntry.PayCost(num);
@@ -701,7 +703,7 @@ namespace MercDeployments {
 
                         try
                         {
-                            if (Fields.Deployment && Fields.DeploymentRemainingDays % 30 == 29)
+                            if (Fields.Deployment && Fields.DeploymentRemainingDays % 30 == 29  && (30 * Fields.DeploymentLenght - Fields.DeploymentRemainingDays) > 5)
                             {
                                 Fields.PaymentTime = new WorkOrderEntry_Notification(WorkOrderType.NotificationGeneric, "Deployment Payment", "Deployment Payment");
                                 Fields.PaymentTime.SetCost(29);
@@ -744,7 +746,7 @@ namespace MercDeployments {
 
                         MissionChance = MissionChance + MissionChanceMod;
 
-                        if (Fields.MissionsDoneCurrentMonth >= (int)MaxDeployments)
+                        if (Fields.MissionsDoneCurrentMonth >= (int)Math.Round(MaxDeployments, MidpointRounding.AwayFromZero))
                         {
                             MissionChance = 0;
                         }
