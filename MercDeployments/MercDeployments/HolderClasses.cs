@@ -13,6 +13,25 @@ namespace MercDeployments {
         public float BonusPercentage = 0.05f;
         public float MaxDeploymentPercentage = 1f;
         public float MaxDeploymentsPerMonth = 6;
+        public double DCV_Low = -0.25;
+        public double DCV_Medium = -0.18;
+        public double DCV_High = 0.05;
+        public int MaxContracts_Low = -5;
+        public int MaxContracts_Medium = -3;
+        public int MaxContracts_High = 1;
+        public int PayMultiplier_Low = -4;
+        public int PayMultiplier_Medium = -2;
+        public int PayMultiplier_High = 1;
+        public double PercentChangeLow = 0;
+        public double PercentChangeMedium = 0.0025;
+        public double PercentChangeHigh = 0.0050;
+        public int PilotLimitLow = 7;
+        public int PilotLimitMedium = 13;
+        public int PilotLimitHigh = 17;
+        public double DCV_Adjustment = 0.01;
+        public double MaxContractsAdjustment = 0.25;
+        public double PayMultiplierAdjustment = 0.25;
+
     }
     
     public static class Fields {
@@ -29,6 +48,8 @@ namespace MercDeployments {
         public static int DeploymentRemainingDays = 0;
         public static int MissionsDoneCurrentMonth = 0;
         public static int DaysSinceLastMission = 0;
+        public static bool MissionWithdraw = false;
+        public static bool ResetContracts = false;
 
 
         public static Dictionary<string, Contract> DeploymentContracts = new Dictionary<string, Contract>();
@@ -38,6 +59,7 @@ namespace MercDeployments {
         public static bool SkipPreparePostfix = false;
         public static bool PaymentCall = false;
         public static WorkOrderEntry_Notification TimeLineEntry = null;
+        public static WorkOrderEntry_Notification PaymentTime = null;
     }
 
     public struct PotentialContract {

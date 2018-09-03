@@ -24,10 +24,11 @@ namespace MercDeployments {
         public  Dictionary<string,int> AlreadyRaised = new Dictionary<string,int>();
         public int MissionsDoneCurrentMonth = 0;
         public int DaysSinceLastMission = 0;
+        public bool ResetContracts = false;
 
         public SaveFields(bool Deployment, Faction DeploymentEmployer, 
                 Faction DeploymentTarget, int DeploymentDifficulty, float DeploymentNegotiatedSalvage, 
-                float DeploymentNegotiatedPayment, int DeploymentSalary, int DeploymentSalvage, Dictionary<string, int> AlreadyRaised, int DeploymentLenght, int DeploymentRemainingDays, int MissionsDoneCurrentMonth, int DaysSinceLastMission) {
+                float DeploymentNegotiatedPayment, int DeploymentSalary, int DeploymentSalvage, Dictionary<string, int> AlreadyRaised, int DeploymentLenght, int DeploymentRemainingDays, int MissionsDoneCurrentMonth, int DaysSinceLastMission, bool ResetContracts) {
 
             this.Deployment = Deployment;
             this.DeploymentEmployer = DeploymentEmployer;
@@ -42,6 +43,7 @@ namespace MercDeployments {
             this.DeploymentRemainingDays = DeploymentRemainingDays;
             this.MissionsDoneCurrentMonth = MissionsDoneCurrentMonth;
             this.DaysSinceLastMission = DaysSinceLastMission;
+            this.ResetContracts = ResetContracts;
         }
     }
 
@@ -74,7 +76,7 @@ namespace MercDeployments {
                     SaveFields fields = new SaveFields(Fields.Deployment, 
                         Fields.DeploymentEmployer, Fields.DeploymentTarget, Fields.DeploymentDifficulty,
                         Fields.DeploymentNegotiatedSalvage, Fields.DeploymentNegotiatedPayment, Fields.DeploymentSalary, 
-                        Fields.DeploymentSalvage, Fields.AlreadyRaised, Fields.DeploymentLenght, Fields.DeploymentRemainingDays, Fields.MissionsDoneCurrentMonth, Fields.DaysSinceLastMission);
+                        Fields.DeploymentSalvage, Fields.AlreadyRaised, Fields.DeploymentLenght, Fields.DeploymentRemainingDays, Fields.MissionsDoneCurrentMonth, Fields.DaysSinceLastMission, Fields.ResetContracts);
                     string json = JsonConvert.SerializeObject(fields);
                     writer.Write(json);
                 }
@@ -106,6 +108,7 @@ namespace MercDeployments {
                         Fields.DeploymentRemainingDays = save.DeploymentRemainingDays;
                         Fields.MissionsDoneCurrentMonth = save.MissionsDoneCurrentMonth;
                         Fields.DaysSinceLastMission = save.DaysSinceLastMission;
+                        Fields.ResetContracts = save.ResetContracts;
                     }
                 }
             }
@@ -114,7 +117,8 @@ namespace MercDeployments {
             }
         }
 
-        public static Contract GetNewContract(SimGameState Sim, int Difficulty, Faction emp, Faction targ) {
+        public static Contract 
+            GetNewContract(SimGameState Sim, int Difficulty, Faction emp, Faction targ) {
             if(Difficulty <= 1) {
                 Difficulty = 2;
             } else if (Difficulty > 9) {
