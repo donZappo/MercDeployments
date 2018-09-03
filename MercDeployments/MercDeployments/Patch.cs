@@ -632,29 +632,15 @@ namespace MercDeployments {
         }
     }
 
-    [HarmonyPatch(typeof(SGRoomController_CmdCenter), "StartContractScreen")]
-    public static class SimGameState_StartContractScreen_Prefix
+    [HarmonyPatch(typeof(SGRoomController_CmdCenter), "StartContractScreen", MethodType.Normal)]
+    public static class CmdCenter_Init_Patch
     {
-
-        public static void RunOnContractsFetched(SGRoomController_CmdCenter __instance)
+        public static void Prefix(SimGameState ___simState)
         {
-            __instance.OnContractsFetched();
-        }
-
-        static bool Prefix(SGRoomController_CmdCenter __instance)
-        {
-            if (Fields.ResetContracts)
-            {
-                Fields.ResetContracts = false;
-                SGContractsWidget widget = Traverse.Create(__instance).Field("contractsWidget").GetValue<SGContractsWidget>();
-                widget.SetLoadingVisible();
-                __instance.simState.CurSystem.GenerateInitialContracts(new Action(__instance.OnContractsFetched));
-                return false;
-            }
-            else
-                return true;
+            UnityGameInstance.BattleTechGame.Simulation.CurSystem.initialContractsFetched = false;
         }
     }
+
 
     [HarmonyPatch(typeof(SimGameState), "OnDayPassed")]
     public static class SimGameState_OnDayPassed_Patch {
