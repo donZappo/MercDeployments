@@ -347,6 +347,7 @@ namespace MercDeployments {
                     Fields.DeploymentContracts = new Dictionary<string, Contract>();
                     Fields.DeploymentContracts.Add(__instance.ActiveTravelContract.Name, __instance.ActiveTravelContract);
                     Fields.MissionWithdraw = false;
+                    Fields.ResetContracts = false;
                 }
             }
             catch (Exception e) {
@@ -469,25 +470,33 @@ namespace MercDeployments {
         }
     }
 
+
     [HarmonyPatch(typeof(SGRoomController_CmdCenter), "GetAllContracts")]
-    public static class SGRoomController_CmdCenter_GetAllContracts_Patch {
-        static bool Prefix(SGRoomController_CmdCenter __instance, ref List<Contract> __result) {
-            try {
-                if (Fields.Deployment) {
+    public static class SGRoomController_CmdCenter_GetAllContracts_Patch
+    {
+        static bool Prefix(SGRoomController_CmdCenter __instance, ref List<Contract> __result, SimGameState ___simState)
+        {
+            try
+            {
+                if (Fields.Deployment)
+                {
                     List<Contract> list = Fields.DeploymentContracts.Values.ToList();
                     __result = list;
                     return false;
                 }
-                else {
+                else
+                {
                     return true;
                 }
             }
-            catch (Exception e) {
+            catch (Exception e)
+            {
                 Logger.LogError(e);
                 return true;
             }
         }
     }
+
 
     [HarmonyPatch(typeof(SGFinancialForecastWidget), "RefreshData")]
     public static class SGFinancialForecastWidget_RefreshData_Patch {
@@ -623,6 +632,29 @@ namespace MercDeployments {
         }
     }
 
+    [HarmonyPatch(typeof(SGRoomController_CmdCenter), "StartContractScreen")]
+    public static class SimGameState_StartContractScreen_Prefix
+    {
+
+        public static void RunOnContractsFetched(SGRoomController_CmdCenter __instance)
+        {
+            __instance.OnContractsFetched();
+        }
+
+        static bool Prefix(SGRoomController_CmdCenter __instance)
+        {
+            if (Fields.ResetContracts)
+            {
+                Fields.ResetContracts = false;
+                SGContractsWidget widget = Traverse.Create(__instance).Field("contractsWidget").GetValue<SGContractsWidget>();
+                widget.SetLoadingVisible();
+                __instance.simState.CurSystem.GenerateInitialContracts(new Action(__instance.OnContractsFetched));
+                return false;
+            }
+            else
+                return true;
+        }
+    }
 
     [HarmonyPatch(typeof(SimGameState), "OnDayPassed")]
     public static class SimGameState_OnDayPassed_Patch {
@@ -640,7 +672,7 @@ namespace MercDeployments {
                     __instance.AddFunds(Fields.DeploymentSalary);
                     SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(__instance);
                     interruptQueue.QueueGenericPopup("Deployment Payment", "Commander, we just received the payment of " + Fields.DeploymentSalary.ToString("N0") + " C-Bills for last month's deployment service.");
-                    
+              
                     __instance.StopPlayMode();
 
                 }
@@ -684,7 +716,8 @@ namespace MercDeployments {
                         __instance.CurSystem.SystemContracts.Clear();
                         __instance.RoomManager.RefreshTimeline();
                         //AccessTools.Field(typeof(SimGameState), "activeBreadcrumb").SetValue(__instance, null);
-                        __instance.CurSystem.GenerateInitialContracts();
+                        Fields.ResetContracts = true;
+                        
                     }
 
 
@@ -697,7 +730,7 @@ namespace MercDeployments {
                         __instance.CurSystem.SystemContracts.Clear();
                         __instance.RoomManager.RefreshTimeline();
                         //AccessTools.Field(typeof(SimGameState), "activeBreadcrumb").SetValue(__instance, null);
-                        __instance.CurSystem.GenerateInitialContracts();
+                        Fields.ResetContracts = true;
                     }
                     else {
 
@@ -750,6 +783,7 @@ namespace MercDeployments {
                         {
                             MissionChance = 0;
                         }
+                        MissionChance = 0;
 
                         if (rand.NextDouble() < MissionChance)
                         {
