@@ -50,6 +50,7 @@ namespace MercDeployments {
         public static int DaysSinceLastMission = 0;
         public static bool MissionWithdraw = false;
         public static bool ResetContracts = false;
+        public static Contract SavedContract;
 
 
         public static Dictionary<string, Contract> DeploymentContracts = new Dictionary<string, Contract>();
@@ -62,7 +63,8 @@ namespace MercDeployments {
         public static WorkOrderEntry_Notification PaymentTime = null;
     }
 
-    public struct PotentialContract {
+    public struct PotentialContract
+    {
         // Token: 0x040089A4 RID: 35236
         public ContractOverride contractOverride;
 

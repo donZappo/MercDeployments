@@ -25,10 +25,13 @@ namespace MercDeployments {
         public int MissionsDoneCurrentMonth = 0;
         public int DaysSinceLastMission = 0;
         public bool ResetContracts = false;
+        public Contract SavedContract;
+
 
         public SaveFields(bool Deployment, Faction DeploymentEmployer, 
                 Faction DeploymentTarget, int DeploymentDifficulty, float DeploymentNegotiatedSalvage, 
-                float DeploymentNegotiatedPayment, int DeploymentSalary, int DeploymentSalvage, Dictionary<string, int> AlreadyRaised, int DeploymentLenght, int DeploymentRemainingDays, int MissionsDoneCurrentMonth, int DaysSinceLastMission, bool ResetContracts) {
+                float DeploymentNegotiatedPayment, int DeploymentSalary, int DeploymentSalvage, Dictionary<string, int> AlreadyRaised, int DeploymentLenght, 
+                int DeploymentRemainingDays, int MissionsDoneCurrentMonth, int DaysSinceLastMission, bool ResetContracts, Contract SavedContract) {
 
             this.Deployment = Deployment;
             this.DeploymentEmployer = DeploymentEmployer;
@@ -44,6 +47,7 @@ namespace MercDeployments {
             this.MissionsDoneCurrentMonth = MissionsDoneCurrentMonth;
             this.DaysSinceLastMission = DaysSinceLastMission;
             this.ResetContracts = ResetContracts;
+            this.SavedContract = SavedContract;
         }
     }
 
@@ -76,7 +80,8 @@ namespace MercDeployments {
                     SaveFields fields = new SaveFields(Fields.Deployment, 
                         Fields.DeploymentEmployer, Fields.DeploymentTarget, Fields.DeploymentDifficulty,
                         Fields.DeploymentNegotiatedSalvage, Fields.DeploymentNegotiatedPayment, Fields.DeploymentSalary, 
-                        Fields.DeploymentSalvage, Fields.AlreadyRaised, Fields.DeploymentLenght, Fields.DeploymentRemainingDays, Fields.MissionsDoneCurrentMonth, Fields.DaysSinceLastMission, Fields.ResetContracts);
+                        Fields.DeploymentSalvage, Fields.AlreadyRaised, Fields.DeploymentLenght, Fields.DeploymentRemainingDays, Fields.MissionsDoneCurrentMonth, 
+                        Fields.DaysSinceLastMission, Fields.ResetContracts, Fields.SavedContract);
                     string json = JsonConvert.SerializeObject(fields);
                     writer.Write(json);
                 }
@@ -109,6 +114,7 @@ namespace MercDeployments {
                         Fields.MissionsDoneCurrentMonth = save.MissionsDoneCurrentMonth;
                         Fields.DaysSinceLastMission = save.DaysSinceLastMission;
                         Fields.ResetContracts = save.ResetContracts;
+                        Fields.SavedContract = save.SavedContract;
                     }
                 }
             }

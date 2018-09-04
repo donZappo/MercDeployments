@@ -221,8 +221,8 @@ namespace MercDeployments {
             try {
                 Helper.SaveState(__instance.InstanceGUID, __instance.SaveTime);
                 if (Fields.Deployment) {
-                    gameInstance.Simulation.CurSystem.SystemContracts.Clear();
-                    gameInstance.Simulation.CurSystem.SystemContracts.AddRange(Fields.DeploymentContracts.Values);
+                    //gameInstance.Simulation.CurSystem.SystemContracts.Clear();
+                    //gameInstance.Simulation.CurSystem.SystemContracts.AddRange(Fields.DeploymentContracts.Values);
                 }
             }
             catch (Exception e) {
@@ -249,37 +249,47 @@ namespace MercDeployments {
         static void Postfix(SimGameState __instance, GameInstanceSave gameInstanceSave) {
             try {
                 if (Fields.Deployment) {
-                    Fields.DeploymentContracts = new Dictionary<string, Contract>();
-                    foreach (Contract contract in __instance.CurSystem.SystemContracts) {
-                        contract.Override.salvagePotential = Fields.DeploymentSalvage;
-                        contract.Override.disableNegotations = true;
-                        SimGameEventResult simGameEventResult = new SimGameEventResult();
-                        SimGameResultAction simGameResultAction = new SimGameResultAction();
-                        int num2 = 11;
-                        simGameResultAction.Type = SimGameResultAction.ActionType.System_StartNonProceduralContract;
-                        simGameResultAction.value = contract.mapName;
-                        simGameResultAction.additionalValues = new string[num2];
-                        simGameResultAction.additionalValues[0] = __instance.CurSystem.ID;
-                        simGameResultAction.additionalValues[1] = contract.mapPath;
-                        simGameResultAction.additionalValues[2] = contract.encounterObjectGuid;
-                        simGameResultAction.additionalValues[3] = contract.Override.ID;
-                        simGameResultAction.additionalValues[4] = (!contract.Override.useTravelCostPenalty).ToString();
-                        simGameResultAction.additionalValues[5] = Fields.DeploymentEmployer.ToString();
-                        simGameResultAction.additionalValues[6] = Fields.DeploymentTarget.ToString();
-                        simGameResultAction.additionalValues[7] = contract.Difficulty.ToString();
-                        simGameResultAction.additionalValues[8] = "true";
-                        simGameResultAction.additionalValues[9] = Fields.DeploymentEmployer.ToString();
-                        simGameResultAction.additionalValues[10] = contract.Override.travelSeed.ToString();
-                        simGameEventResult.Actions = new SimGameResultAction[1];
-                        simGameEventResult.Actions[0] = simGameResultAction;
-                        contract.Override.OnContractSuccessResults.Add(simGameEventResult);
-                        if (!gameInstanceSave.HasCombatData) {
-                            AccessTools.Field(typeof(SimGameState), "activeBreadcrumb").SetValue(__instance, contract);
-                        }
-                        Fields.DeploymentContracts.Add(contract.Name, contract);
-                        Fields.MissionWithdraw = false;
+                    //foreach (Contract contract in __instance.CurSystem.SystemContracts)
+                    //{
+                    //    Logger.LogLine("Saved Contract: " + Fields.SavedContract.ToString());
+                    //    Logger.LogLine("Contract Name: " + contract.Name.ToString());
+                    //    if (contract.Name == Fields.SavedContract)
+                    Contract contract = Fields.SavedContract;
+                    contract.Override.salvagePotential = Fields.DeploymentSalvage;
+                    contract.Override.disableNegotations = true;
+                    SimGameEventResult simGameEventResult = new SimGameEventResult();
+                    SimGameResultAction simGameResultAction = new SimGameResultAction();
+                    int num2 = 11;
+                    simGameResultAction.Type = SimGameResultAction.ActionType.System_StartNonProceduralContract;
+                    simGameResultAction.value = contract.mapName;
+                    simGameResultAction.additionalValues = new string[num2];
+                    simGameResultAction.additionalValues[0] = __instance.CurSystem.ID;
+                    simGameResultAction.additionalValues[1] = contract.mapPath;
+                    simGameResultAction.additionalValues[2] = contract.encounterObjectGuid;
+                    simGameResultAction.additionalValues[3] = contract.Override.ID;
+                    simGameResultAction.additionalValues[4] = (!contract.Override.useTravelCostPenalty).ToString();
+                    simGameResultAction.additionalValues[5] = Fields.DeploymentEmployer.ToString();
+                    simGameResultAction.additionalValues[6] = Fields.DeploymentTarget.ToString();
+                    simGameResultAction.additionalValues[7] = contract.Difficulty.ToString();
+                    simGameResultAction.additionalValues[8] = "true";
+                    simGameResultAction.additionalValues[9] = Fields.DeploymentEmployer.ToString();
+                    simGameResultAction.additionalValues[10] = contract.Override.travelSeed.ToString();
+                    simGameEventResult.Actions = new SimGameResultAction[1];
+                    simGameEventResult.Actions[0] = simGameResultAction;
+                    contract.Override.OnContractSuccessResults.Add(simGameEventResult);
+                    Fields.DeploymentContracts.Add(contract.Name, contract);
+                    AccessTools.Field(typeof(SimGameState), "activeBreadcrumb").SetValue(__instance, contract);
+                    Fields.DeploymentContracts.Add(contract.Name, contract);
+                    Action primaryAction = delegate () {
+                        __instance.QueueCompleteBreadcrumbProcess(true);
+                    };
+
+                    if (!gameInstanceSave.HasCombatData)
+                    {
+                        AccessTools.Field(typeof(SimGameState), "activeBreadcrumb").SetValue(__instance, contract);
                     }
                 }
+                Fields.MissionWithdraw = false;
             }
             catch (Exception e) {
                 Logger.LogError(e);
@@ -635,9 +645,16 @@ namespace MercDeployments {
     [HarmonyPatch(typeof(SGRoomController_CmdCenter), "StartContractScreen", MethodType.Normal)]
     public static class CmdCenter_Init_Patch
     {
-        public static void Prefix(SimGameState ___simState)
+        public static void Prefix(SGRoomController_CmdCenter __instance, SimGameState ___simState)
         {
-            UnityGameInstance.BattleTechGame.Simulation.CurSystem.initialContractsFetched = false;
+            if(Fields.ResetContracts)
+            {
+                //___simState.CurSystem.SystemContracts.Clear();
+                //___simState.CurSystem.SystemBreadcrumbs.Clear();
+                //Contract newcon = Helper.GetNewContract(___simState, Fields.DeploymentDifficulty, Fields.DeploymentEmployer, Fields.DeploymentTarget);
+                UnityGameInstance.BattleTechGame.Simulation.CurSystem.initialContractsFetched = false;
+            }
+            
         }
     }
 
@@ -699,9 +716,9 @@ namespace MercDeployments {
                         SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(__instance);
                         interruptQueue.QueueGenericPopup("Deployment Over", "Failure to complete mission ends Deployment.");
                         Fields.DeploymentContracts = new Dictionary<string, Contract>();
-                        __instance.CurSystem.SystemContracts.Clear();
+                        //__instance.CurSystem.SystemContracts.Clear();
                         __instance.RoomManager.RefreshTimeline();
-                        //AccessTools.Field(typeof(SimGameState), "activeBreadcrumb").SetValue(__instance, null);
+                        AccessTools.Field(typeof(SimGameState), "activeBreadcrumb").SetValue(__instance, null);
                         Fields.ResetContracts = true;
                         
                     }
@@ -713,9 +730,9 @@ namespace MercDeployments {
                         SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(__instance);
                         interruptQueue.QueueGenericPopup("Deployment Over", "Thanks for your services.");
                         Fields.DeploymentContracts = new Dictionary<string, Contract>();
-                        __instance.CurSystem.SystemContracts.Clear();
+                        //__instance.CurSystem.SystemContracts.Clear();
                         __instance.RoomManager.RefreshTimeline();
-                        //AccessTools.Field(typeof(SimGameState), "activeBreadcrumb").SetValue(__instance, null);
+                        AccessTools.Field(typeof(SimGameState), "activeBreadcrumb").SetValue(__instance, null);
                         Fields.ResetContracts = true;
                     }
                     else {
@@ -769,7 +786,6 @@ namespace MercDeployments {
                         {
                             MissionChance = 0;
                         }
-                        MissionChance = 0;
 
                         if (rand.NextDouble() < MissionChance)
                         {
@@ -810,6 +826,7 @@ namespace MercDeployments {
                             interruptQueue.QueueTravelPauseNotification("New Mission", "Our Employer has a new mission for us.", __instance.GetCrewPortrait(SimGameCrew.Crew_Darius),
                             string.Empty, new Action(primaryAction), "Proceed", new Action(__instance.OnBreadcrumbWait), "Not Yet");
                             Fields.DaysSinceLastMission = 0;
+                            Fields.SavedContract = newcon;
                         }
                         else
                             Fields.DaysSinceLastMission = Fields.DaysSinceLastMission + 1;
