@@ -22,7 +22,7 @@ namespace MercDeployments {
             try {
                 SimGameState Sim = (SimGameState)AccessTools.Property(typeof(SGContractsWidget), "Sim").GetValue(__instance, null);
                 if (__instance.SelectedContract.Override.travelOnly && !__instance.SelectedContract.IsPriorityContract && Sim.ActiveMechs.Count < 8) {
-                    string message = "Commander, a deployment is a longer term arrangement with an employer, that may require missions to be done without time between them for repairs. I strongly encourage you to only deploy on this arrangement if we are capable of fielding multiple lances with little or no time for repairs, just in case.";
+                    string message = "Commander, a deployment is a longer term arrangement with an employer that may require missions to be done without time between them for repairs. I strongly encourage you to only deploy on this arrangement if we are capable of fielding multiple lances with little or no time for repairs, just in case.";
                     PauseNotification.Show("Deployment", message,
                         Sim.GetCrewPortrait(SimGameCrew.Crew_Darius), string.Empty, true, delegate {
                             __instance.NegotiateContract(__instance.SelectedContract, null);
@@ -254,11 +254,14 @@ namespace MercDeployments {
                 {
                     Fields.DeploymentContracts = new Dictionary<string, Contract>();
                     
-                    System.Random random = new System.Random();
-                    int contractnum = random.Next(0, __instance.CurSystem.SystemContracts.Count());
-                    Contract contract = __instance.CurSystem.SystemContracts[contractnum];
+                    
+                    Contract contract = Helper.GetNewContract(__instance, Fields.DeploymentDifficulty, Fields.DeploymentEmployer,
+                        Fields.DeploymentTarget);
+                    contract.SetInitialReward(0);
                     contract.Override.salvagePotential = Fields.DeploymentSalvage;
+                    contract.SetNegotiatedValues(Fields.DeploymentNegotiatedPayment, Fields.DeploymentNegotiatedSalvage);
                     contract.Override.disableNegotations = true;
+                    
                     SimGameEventResult simGameEventResult = new SimGameEventResult();
                     SimGameResultAction simGameResultAction = new SimGameResultAction();
                     int num2 = 11;
@@ -279,11 +282,19 @@ namespace MercDeployments {
                     simGameEventResult.Actions = new SimGameResultAction[1];
                     simGameEventResult.Actions[0] = simGameResultAction;
                     contract.Override.OnContractSuccessResults.Add(simGameEventResult);
+                    AccessTools.Field(typeof(SimGameState), "activeBreadcrumb").SetValue(__instance, contract);
+                    Fields.DeploymentContracts.Add(contract.Name, contract);
+                    Action primaryAction = delegate ()
+                    {
+                        __instance.QueueCompleteBreadcrumbProcess(true);
+                    };
+                    
                     if (!gameInstanceSave.HasCombatData)
                     {
                         AccessTools.Field(typeof(SimGameState), "activeBreadcrumb").SetValue(__instance, contract);
                     }
-                    Fields.DeploymentContracts.Add(contract.Name, contract);
+                    //if (!Fields.DeploymentContracts.ContainsKey(contract.Name))
+                    //    Fields.DeploymentContracts.Add(contract.Name, contract);
                 }
             }
             catch (Exception e)
