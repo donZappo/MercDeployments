@@ -48,10 +48,23 @@ namespace MercDeployments {
                 if (Fields.Deployment) {
                     Settings settings = Helper.LoadSettings();
                     Contract theContract = (Contract)AccessTools.Field(typeof(AAR_ContractObjectivesWidget), "theContract").GetValue(__instance);
+                    int PrimaryCount = 1;
                     foreach (MissionObjectiveResult missionObjectiveResult in theContract.MissionObjectiveResultList) {
                         if (missionObjectiveResult.isPrimary) {
-                            foreach (SimGameEventResult result in missionObjectiveResult.simGameEventResultList) {
-                                result.Stats = null;
+                            foreach (SimGameEventResult result in missionObjectiveResult.simGameEventResultList)
+                            {
+                                if (missionObjectiveResult.status == ObjectiveStatus.Succeeded && PrimaryCount == 1)
+                                {
+                                    int Payment = Mathf.RoundToInt(settings.DeploymentPercentPayment * Fields.DeploymentSalary);
+                                    string missionObjectiveResultString = "Bonus For Primary Objective: " + SimGameState.GetCBillString(Payment);
+                                    MissionObjectiveResult missionObjectiveResult2 = new MissionObjectiveResult(missionObjectiveResultString, "7facf07a-626d-4a3b-a1ec-b29a35ff1ac0", false, true, ObjectiveStatus.Succeeded, false);
+                                    ReflectionHelper.InvokePrivateMethode(__instance, "AddObjective", new object[] { missionObjectiveResult2 });
+                                    PrimaryCount = 2;
+                                }
+                                else
+                                {
+                                    result.Stats = null;
+                                }
                             }
                             ReflectionHelper.InvokePrivateMethode(__instance, "AddObjective", new object[] { missionObjectiveResult });
                         }
@@ -83,9 +96,17 @@ namespace MercDeployments {
                 if (Fields.Deployment) {
                     Settings settings = Helper.LoadSettings();
                     int bonusPayment = 0;
-                    foreach (MissionObjectiveResult missionObjectiveResult in __instance.MissionObjectiveResultList) {
-                        if (!missionObjectiveResult.isPrimary && missionObjectiveResult.status == ObjectiveStatus.Succeeded) {
+                    bool OnePrimary = true;
+                    foreach (MissionObjectiveResult missionObjectiveResult in __instance.MissionObjectiveResultList)
+                    {
+                        if (!missionObjectiveResult.isPrimary && missionObjectiveResult.status == ObjectiveStatus.Succeeded)
+                        {
                             bonusPayment += Mathf.RoundToInt(settings.BonusPercentage * Fields.DeploymentSalary);
+                        }
+                        else if (missionObjectiveResult.isPrimary && missionObjectiveResult.status == ObjectiveStatus.Succeeded && OnePrimary)
+                        {
+                            bonusPayment += Mathf.RoundToInt(settings.DeploymentPercentPayment * Fields.DeploymentSalary);
+                            OnePrimary = false;
                         }
                     }
                     int newMoneyResults = Mathf.FloorToInt(__instance.MoneyResults + bonusPayment);
@@ -723,6 +744,7 @@ namespace MercDeployments {
     [HarmonyPatch(typeof(SimGameState), "OnDayPassed")]
     public static class SimGameState_OnDayPassed_Patch {
         static void Prefix(SimGameState __instance, int timeLapse) {
+            Settings settings = Helper.LoadSettings();
             try {
                 int num = (timeLapse <= 0) ? 1 : timeLapse;
                 if (Fields.Deployment)
@@ -731,12 +753,12 @@ namespace MercDeployments {
                 }
                 if (Fields.Deployment && Fields.DeploymentRemainingDays%__instance.Constants.Finances.QuarterLength == 0 && Fields.DeploymentRemainingDays != Fields.DeploymentLenght * 30) {
                     Fields.PaymentCall = true;
-                    Fields.MissionsDoneCurrentMonth = 0;
                     Fields.DaysSinceLastMission = 0;
-                    __instance.AddFunds(Fields.DeploymentSalary);
+                    int Payment = (int)(Fields.DeploymentSalary - Fields.DeploymentSalary * settings.DeploymentPercentPayment * Fields.MissionsDoneCurrentMonth);
+                    __instance.AddFunds(Payment);
                     SimGameInterruptManager interruptQueue = (SimGameInterruptManager)AccessTools.Field(typeof(SimGameState), "interruptQueue").GetValue(__instance);
-                    interruptQueue.QueueGenericPopup("Deployment Payment", "Commander, we just received the payment of " + Fields.DeploymentSalary.ToString("N0") + " C-Bills for last month's deployment service.");
-              
+                    interruptQueue.QueueGenericPopup("Deployment Payment", "Commander, we just received the payment of " + Payment.ToString("N0") + " C-Bills for last month's deployment service.");
+                    Fields.MissionsDoneCurrentMonth = 0;
                     __instance.StopPlayMode();
 
                 }
@@ -844,6 +866,11 @@ namespace MercDeployments {
                         MissionChance = MissionChance + MissionChanceMod;
 
                         if (Fields.MissionsDoneCurrentMonth >= (int)Math.Round(MaxDeployments, MidpointRounding.AwayFromZero))
+                        {
+                            MissionChance = 0;
+                        }
+
+                        if (Fields.DaysSinceLastMission == 0)
                         {
                             MissionChance = 0;
                         }

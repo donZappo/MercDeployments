@@ -31,6 +31,7 @@ namespace MercDeployments {
         public double DCV_Adjustment = 0.01;
         public double MaxContractsAdjustment = 0.25;
         public double PayMultiplierAdjustment = 0.25;
+        public float DeploymentPercentPayment = 0.1f;
 
     }
     
