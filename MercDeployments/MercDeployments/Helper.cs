@@ -26,12 +26,14 @@ namespace MercDeployments {
         public int DaysSinceLastMission = 0;
         public bool ResetContracts = false;
         public bool NewArrival = true;
+        public int MinDays = 1;
+        public int MaxDays = 10;
 
 
         public SaveFields(bool Deployment, Faction DeploymentEmployer, 
                 Faction DeploymentTarget, int DeploymentDifficulty, float DeploymentNegotiatedSalvage, 
                 float DeploymentNegotiatedPayment, int DeploymentSalary, int DeploymentSalvage, Dictionary<string, int> AlreadyRaised, int DeploymentLenght, 
-                int DeploymentRemainingDays, int MissionsDoneCurrentMonth, int DaysSinceLastMission, bool ResetContracts, bool NewArrival) {
+                int DeploymentRemainingDays, int MissionsDoneCurrentMonth, int DaysSinceLastMission, bool ResetContracts, bool NewArrival, int MinDays, int MaxDays) {
 
             this.Deployment = Deployment;
             this.DeploymentEmployer = DeploymentEmployer;
@@ -48,6 +50,8 @@ namespace MercDeployments {
             this.DaysSinceLastMission = DaysSinceLastMission;
             this.ResetContracts = ResetContracts;
             this.NewArrival = NewArrival;
+            this.MinDays = MinDays;
+            this.MaxDays = MaxDays;
         }
     }
 
@@ -81,7 +85,7 @@ namespace MercDeployments {
                         Fields.DeploymentEmployer, Fields.DeploymentTarget, Fields.DeploymentDifficulty,
                         Fields.DeploymentNegotiatedSalvage, Fields.DeploymentNegotiatedPayment, Fields.DeploymentSalary, 
                         Fields.DeploymentSalvage, Fields.AlreadyRaised, Fields.DeploymentLenght, Fields.DeploymentRemainingDays, Fields.MissionsDoneCurrentMonth, 
-                        Fields.DaysSinceLastMission, Fields.ResetContracts, Fields.NewArrival);
+                        Fields.DaysSinceLastMission, Fields.ResetContracts, Fields.NewArrival, Fields.MinDays, Fields.MaxDays);
                     string json = JsonConvert.SerializeObject(fields);
                     writer.Write(json);
                 }
@@ -115,6 +119,8 @@ namespace MercDeployments {
                         Fields.DaysSinceLastMission = save.DaysSinceLastMission;
                         Fields.ResetContracts = save.ResetContracts;
                         Fields.NewArrival = save.NewArrival;
+                        Fields.MinDays = save.MinDays;
+                        Fields.MaxDays = save.MaxDays;
                     }
                 }
             }

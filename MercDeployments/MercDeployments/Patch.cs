@@ -18,9 +18,10 @@ namespace MercDeployments {
     public static class AAR_SalvageScreen_OnCompleted_Patch {
         static void Postfix(AAR_SalvageScreen __instance) {
             try {
-                
+                Settings settings = Helper.LoadSettings();
+                System.Random rnd = new System.Random();
                 Fields.NewArrival = false;
-                Fields.DeploymentRemainingDays = 5;
+                Fields.DeploymentRemainingDays = rnd.Next(settings.MinDays, settings.MaxDays + 1);
                 }
             catch (Exception e) {
                 Logger.LogError(e);

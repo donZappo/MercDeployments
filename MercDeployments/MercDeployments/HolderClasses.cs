@@ -32,6 +32,8 @@ namespace MercDeployments {
         public double MaxContractsAdjustment = 0.25;
         public double PayMultiplierAdjustment = 0.25;
         public float DeploymentPercentPayment = 0.1f;
+        public int MinDays = 1;
+        public int MaxDays = 10;
 
     }
     
@@ -53,6 +55,8 @@ namespace MercDeployments {
         public static bool ResetContracts = false;
         public static Contract SavedContract;
         public static bool NewArrival = true;
+        public static int MinDays = 1;
+        public static int MaxDays = 10;
 
 
         public static Dictionary<string, Contract> DeploymentContracts = new Dictionary<string, Contract>();
