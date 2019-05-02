@@ -5,7 +5,6 @@ using BattleTech.Save.SaveGameStructure;
 using BattleTech.UI;
 using DG.Tweening;
 using Harmony;
-using SVGImporter;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +13,20 @@ using UnityEngine;
 using UnityEngine.UI;
 
 namespace MercDeployments {
+
+    [HarmonyPatch(typeof(AAR_SalvageScreen), "OnCompleted")]
+    public static class AAR_SalvageScreen_OnCompleted_Patch {
+        static void Postfix(AAR_SalvageScreen __instance) {
+            try {
+                
+                Fields.NewArrival = false;
+                Fields.DeploymentRemainingDays = 5;
+                }
+            catch (Exception e) {
+                Logger.LogError(e);
+            }
+        }
+    }
 
     [HarmonyPatch(typeof(SimGameState), "_OnFirstPlayInit")]
     public static class SimGameState_FirstPlayInit_Patch {
