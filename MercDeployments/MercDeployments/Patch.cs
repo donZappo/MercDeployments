@@ -21,7 +21,7 @@ namespace MercDeployments {
                 Settings settings = Helper.LoadSettings();
                 System.Random rnd = new System.Random();
                 Fields.NewArrival = false;
-                Fields.DeploymentRemainingDays = rnd.Next(settings.MinDays, settings.MaxDays + 1);
+                Fields.DeploymentRemainingDays = rnd.Next(Fields.MinDays, Fields.MaxDays+1);
                 }
             catch (Exception e) {
                 Logger.LogError(e);
@@ -58,7 +58,7 @@ namespace MercDeployments {
     public static class TaskTimelineWidget_RegenerateEntries_Patch {
         static void Postfix(TaskTimelineWidget __instance) {
             try {
-                if (Fields.Deployment)
+                if (!Fields.NewArrival)
                 {
                     Fields.TimeLineEntry = new WorkOrderEntry_Notification(WorkOrderType.NotificationGeneric, "Days Until Mission", "Days Until Mission");
                     Fields.TimeLineEntry.SetCost(Fields.DeploymentRemainingDays);
@@ -125,6 +125,13 @@ namespace MercDeployments {
                 {
                     Fields.DeploymentRemainingDays -= num;
                 }
+
+                if (__instance.CurSystem.SystemContracts.Count() == 0)
+                {
+                    Fields.NewArrival = true;
+                    Fields.DeploymentRemainingDays = 0;
+                }
+
                 if (Fields.TimeLineEntry != null) {
                     Fields.TimeLineEntry.PayCost(num);
                     TaskManagementElement taskManagementElement4 = null;
@@ -152,4 +159,21 @@ namespace MercDeployments {
                 }
             }
         }
+    [HarmonyPatch(typeof(SGNavigationScreen), "OnTravelCourseAccepted")]
+    public static class SGNavigationScreen_OnTravelCourseAccepted_Patch
+    {
+        static bool Prefix(SGNavigationScreen __instance)
+        {
+            try
+            {
+                Fields.NewArrival = true;
+                return true;
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(e);
+                return true;
+            }
+        }
+    }
 }
