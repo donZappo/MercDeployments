@@ -52,6 +52,7 @@ namespace MercDeployments {
         public static bool MissionWithdraw = false;
         public static bool ResetContracts = false;
         public static Contract SavedContract;
+        public static bool NewArrival = true;
 
 
         public static Dictionary<string, Contract> DeploymentContracts = new Dictionary<string, Contract>();

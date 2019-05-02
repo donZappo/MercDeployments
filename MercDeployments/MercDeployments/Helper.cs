@@ -25,12 +25,13 @@ namespace MercDeployments {
         public int MissionsDoneCurrentMonth = 0;
         public int DaysSinceLastMission = 0;
         public bool ResetContracts = false;
+        public bool NewArrival = true;
 
 
         public SaveFields(bool Deployment, Faction DeploymentEmployer, 
                 Faction DeploymentTarget, int DeploymentDifficulty, float DeploymentNegotiatedSalvage, 
                 float DeploymentNegotiatedPayment, int DeploymentSalary, int DeploymentSalvage, Dictionary<string, int> AlreadyRaised, int DeploymentLenght, 
-                int DeploymentRemainingDays, int MissionsDoneCurrentMonth, int DaysSinceLastMission, bool ResetContracts) {
+                int DeploymentRemainingDays, int MissionsDoneCurrentMonth, int DaysSinceLastMission, bool ResetContracts, bool NewArrival) {
 
             this.Deployment = Deployment;
             this.DeploymentEmployer = DeploymentEmployer;
@@ -46,6 +47,7 @@ namespace MercDeployments {
             this.MissionsDoneCurrentMonth = MissionsDoneCurrentMonth;
             this.DaysSinceLastMission = DaysSinceLastMission;
             this.ResetContracts = ResetContracts;
+            this.NewArrival = NewArrival;
         }
     }
 
@@ -79,7 +81,7 @@ namespace MercDeployments {
                         Fields.DeploymentEmployer, Fields.DeploymentTarget, Fields.DeploymentDifficulty,
                         Fields.DeploymentNegotiatedSalvage, Fields.DeploymentNegotiatedPayment, Fields.DeploymentSalary, 
                         Fields.DeploymentSalvage, Fields.AlreadyRaised, Fields.DeploymentLenght, Fields.DeploymentRemainingDays, Fields.MissionsDoneCurrentMonth, 
-                        Fields.DaysSinceLastMission, Fields.ResetContracts);
+                        Fields.DaysSinceLastMission, Fields.ResetContracts, Fields.NewArrival);
                     string json = JsonConvert.SerializeObject(fields);
                     writer.Write(json);
                 }
@@ -112,6 +114,7 @@ namespace MercDeployments {
                         Fields.MissionsDoneCurrentMonth = save.MissionsDoneCurrentMonth;
                         Fields.DaysSinceLastMission = save.DaysSinceLastMission;
                         Fields.ResetContracts = save.ResetContracts;
+                        Fields.NewArrival = save.NewArrival;
                     }
                 }
             }
